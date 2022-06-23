@@ -1,0 +1,35 @@
+upstream backend_elasticsearch{
+    server  host.docker.internal:9200;
+}
+
+upstream backend_redis{
+    server  host.docker.internal:6379;
+}
+
+upstream backend_localhost{
+    server  host.docker.internal:80;
+}
+
+server {
+        listen 9200;
+        listen [::]:9200;
+        location / {
+                include proxy_params;
+                proxy_pass http://backend_elasticsearch;
+        }
+        # set client body size to 2M #
+         client_max_body_size 50M;
+}
+
+server {
+        listen 6379;
+        listen [::]:6379;
+        location / {
+                include proxy_params;
+                proxy_pass http://backend_redis;
+        }
+        # set client body size to 2M #
+         client_max_body_size 50M;
+}
+
+

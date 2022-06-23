@@ -1,0 +1,403 @@
+version: '3'
+
+services:
+  apache:
+    container_name: apache
+    build:
+      context: ./apache
+      args:
+        - WEB_USER=${WEB_USER}
+        - WEB_GROUP=${WEB_GROUP}
+        - APACHE_ROOT_DIR=${WORK_ROOT_DIR}
+        - LOG_APACHE_ROOT_DIR=${LOG_APACHE_ROOT_DIR}
+        - PHP_8_IP=php_8
+        - PHP_74_IP=php_7_4
+        - PHP_72_IP=php_7_2
+        - PHP_73_IP=php_7_3
+        - PHP_70_IP=php_7_0
+        - PHP_56_IP=php_5_6
+        - MYSQL_IP=mysql
+    volumes:
+      - ../../../projects:${WORK_ROOT_DIR}
+      - ../logs/apache:${LOG_APACHE_ROOT_DIR}
+      - ./apache/conf/httpd.conf:/usr/local/apache2/conf/httpd.conf
+      - ./apache/conf/extra/httpd-vhosts.conf:/usr/local/apache2/conf/extra/httpd-vhosts.conf
+    ports:
+      - ${APACHE_EXPOSED_PORT}:80
+    restart: always
+    environment:
+      - APACHE_EXPOSED_PORT=${APACHE_EXPOSED_PORT}
+      - APACHE_ROOT_DIR=${WORK_ROOT_DIR}
+      - LOG_APACHE_ROOT_DIR=${LOG_APACHE_ROOT_DIR}
+      - WEB_USER=${WEB_USER}
+      - WEB_GROUP=${WEB_GROUP}
+      - PHP_8_IP=php_8
+      - PHP_74_IP=php_7_4
+      - PHP_72_IP=php_7_2
+      - PHP_73_IP=php_7_3
+      - PHP_70_IP=php_7_0
+      - PHP_56_IP=php_5_6
+      - WORK_ROOT_DIR=${WORK_ROOT_DIR}
+      - MYSQL_IP=mysql
+      - mysql8=mysql8
+  php_8:
+    container_name: php_8
+    build:
+      context: ./php/8
+      args:
+        - WEB_USER=${WEB_USER}
+        - WEB_GROUP=${WEB_GROUP}
+        - PHP_ROOT_DIR=${PHP_ROOT_DIR}
+        - WORK_ROOT_DIR=${WORK_ROOT_DIR}
+        - MYSQL_IP=mysql
+    volumes:
+      - ../../../projects:${WORK_ROOT_DIR}:delegated
+      - ./php/8/www.conf:${PHP_ROOT_DIR}/php-fpm.d/www.conf
+      - ./php/8/php.ini:${PHP_ROOT_DIR}/php/conf.d/php.ini
+      - ../logs/php:${PHP_ROOT_DIR}/logs
+      - ./php/composer/auth.json:/root/.composer/auth.json
+      - ./php/nginx/default:/etc/nginx/sites-enabled/default
+    restart: always
+    healthcheck:
+      test: [ "CMD", "service", "nginx", "start" ]
+      interval: 10s
+      timeout: 2s
+      retries: 1
+    environment:
+      - PHP_ROOT_DIR=${PHP_ROOT_DIR}
+      - WORK_ROOT_DIR=${WORK_ROOT_DIR}
+      - APACHE_IP=apache
+      - APACHE_EXPOSED_PORT=${APACHE_EXPOSED_PORT}
+      - WEB_USER=${WEB_USER}
+      - WEB_GROUP=${WEB_GROUP}
+      - MYSQL_IP=mysql
+      - MYSQL_ROOT_USER=${MYSQL_ROOT_USER}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_EXPOSED_PORT=${MYSQL_EXPOSED_PORT}
+      - ELASTIC_IP=elasticsearch
+      - REDIS_IP=redis
+      - mysql8=mysql8
+    ports:
+      - ${PHP_EXPOSED_PORT}:9000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "local.back.presta:host-gateway"
+  php_7_4:
+    container_name: php_7_4
+    build:
+      context: ./php/74
+      args:
+        - WEB_USER=${WEB_USER}
+        - WEB_GROUP=${WEB_GROUP}
+        - PHP_ROOT_DIR=${PHP_ROOT_DIR}
+        - WORK_ROOT_DIR=${WORK_ROOT_DIR}
+        - MYSQL_IP=mysql
+    volumes:
+      - ../../../projects:${WORK_ROOT_DIR}:delegated
+      - ./php/74/www.conf:${PHP_ROOT_DIR}/php-fpm.d/www.conf
+      - ./php/74/php.ini:${PHP_ROOT_DIR}/php/conf.d/php.ini
+      - ../logs/php:${PHP_ROOT_DIR}/logs
+      - ./php/composer/auth.json:/root/.composer/auth.json
+      - ./php/nginx/default:/etc/nginx/sites-enabled/default
+    restart: always
+    healthcheck:
+      test: [ "CMD", "service", "nginx", "start" ]
+      interval: 10s
+      timeout: 2s
+      retries: 1
+    environment:
+      - PHP_ROOT_DIR=${PHP_ROOT_DIR}
+      - WORK_ROOT_DIR=${WORK_ROOT_DIR}
+      - APACHE_IP=apache
+      - APACHE_EXPOSED_PORT=${APACHE_EXPOSED_PORT}
+      - WEB_USER=${WEB_USER}
+      - WEB_GROUP=${WEB_GROUP}
+      - MYSQL_IP=mysql
+      - MYSQL_ROOT_USER=${MYSQL_ROOT_USER}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_EXPOSED_PORT=${MYSQL_EXPOSED_PORT}
+      - ELASTIC_IP=elasticsearch
+      - REDIS_IP=redis
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "local.back.presta:host-gateway"
+      - "etude.symfony5.fr:host-gateway"
+#  php_7_3:
+#    container_name: php73
+#    build:
+#      context: ./php/73
+#      args:
+#        - WEB_USER=${WEB_USER}
+#        - WEB_GROUP=${WEB_GROUP}
+#        - PHP_ROOT_DIR=${PHP_ROOT_DIR}
+#        - WORK_ROOT_DIR=${WORK_ROOT_DIR}
+#        - MYSQL_IP=mysql
+#    volumes:
+#      - ../../../projects:${WORK_ROOT_DIR}:delegated
+#      - ./php/73/www.conf:${PHP_ROOT_DIR}/php-fpm.d/www.conf
+#      - ./php/73/php.ini:${PHP_ROOT_DIR}/php/conf.d/php.ini
+#      - ../logs/php:${PHP_ROOT_DIR}/logs
+#      - ./php/composer/auth.json:/root/.composer/auth.json
+#      - ./php/nginx/default:/etc/nginx/sites-enabled/default
+#    restart: always
+#    healthcheck:
+#      test: [ "CMD", "service", "nginx", "start" ]
+#      interval: 10s
+#      timeout: 2s
+#      retries: 1
+#    environment:
+#      - PHP_ROOT_DIR=${PHP_ROOT_DIR}
+#      - WORK_ROOT_DIR=${WORK_ROOT_DIR}
+#      - APACHE_IP=apache
+#      - APACHE_EXPOSED_PORT=${APACHE_EXPOSED_PORT}
+#      - WEB_USER=${WEB_USER}
+#      - WEB_GROUP=${WEB_GROUP}
+#      - MYSQL_IP=mysql
+#      - MYSQL_ROOT_USER=${MYSQL_ROOT_USER}
+#      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+#      - MYSQL_EXPOSED_PORT=${MYSQL_EXPOSED_PORT}
+#      - ELASTIC_IP=elasticsearch
+#      - REDIS_IP=redis
+#    extra_hosts:
+#      - "host.docker.internal:host-gateway"
+#  php_7_2:
+#    container_name: php72
+#    build:
+#      context: ./php/72
+#      args:
+#        - WEB_USER=${WEB_USER}
+#        - WEB_GROUP=${WEB_GROUP}
+#        - PHP_ROOT_DIR=${PHP_ROOT_DIR}
+#        - WORK_ROOT_DIR=${WORK_ROOT_DIR}
+#    volumes:
+#      - ../../../projects:${WORK_ROOT_DIR}:delegated
+#      - ./php/72/www.conf:${PHP_ROOT_DIR}/php-fpm.d/www.conf
+#      - ./php/72/php.ini:${PHP_ROOT_DIR}/php/conf.d/php.ini
+#      - ../logs/php:${PHP_ROOT_DIR}/logs
+#      - ./php/composer/auth.json:/root/.composer/auth.json
+#      - ./php/nginx/default:/etc/nginx/sites-enabled/default
+#    restart: always
+#    healthcheck:
+#      test: [ "CMD", "service", "nginx", "start" ]
+#      interval: 10s
+#      timeout: 2s
+#      retries: 1
+#    environment:
+#      - PHP_ROOT_DIR=${PHP_ROOT_DIR}
+#      - WORK_ROOT_DIR=${WORK_ROOT_DIR}
+#      - APACHE_IP=apache
+#      - APACHE_EXPOSED_PORT=${APACHE_EXPOSED_PORT}
+#      - WEB_USER=${WEB_USER}
+#      - WEB_GROUP=${WEB_GROUP}
+#      - MYSQL_IP=mysql
+#      - MYSQL_ROOT_USER=${MYSQL_ROOT_USER}
+#      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+#      - MYSQL_EXPOSED_PORT=${MYSQL_EXPOSED_PORT}
+#      - ELASTIC_IP=elasticsearch
+#      - REDIS_IP=redis
+#    extra_hosts:
+#      - "host.docker.internal:host-gateway"
+  php_7_0:
+    container_name: php_7_0
+    build:
+      context: ./php/70
+      args:
+        - WEB_USER=${WEB_USER}
+        - WEB_GROUP=${WEB_GROUP}
+        - PHP_ROOT_DIR=${PHP_ROOT_DIR}
+        - WORK_ROOT_DIR=${WORK_ROOT_DIR}
+    volumes:
+      - ../../../projects:${WORK_ROOT_DIR}:delegated
+      - ./php/70/www.conf:${PHP_ROOT_DIR}/php-fpm.d/www.conf
+      - ./php/70/php.ini:${PHP_ROOT_DIR}/php/conf.d/php.ini
+      - ../logs/php:${PHP_ROOT_DIR}/logs
+      - ./php/composer/auth.json:/root/.composer/auth.json
+      - ./php/nginx/default:/etc/nginx/sites-enabled/default
+    restart: always
+    healthcheck:
+      test: [ "CMD", "service", "nginx", "start" ]
+      interval: 10s
+      timeout: 2s
+      retries: 1
+    environment:
+      - PHP_ROOT_DIR=${PHP_ROOT_DIR}
+      - WORK_ROOT_DIR=${WORK_ROOT_DIR}
+      - APACHE_IP=apache
+      - APACHE_EXPOSED_PORT=${APACHE_EXPOSED_PORT}
+      - WEB_USER=${WEB_USER}
+      - WEB_GROUP=${WEB_GROUP}
+      - MYSQL_IP=mysql
+      - MYSQL_ROOT_USER=${MYSQL_ROOT_USER}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_EXPOSED_PORT=${MYSQL_EXPOSED_PORT}
+      - ELASTIC_IP=elasticsearch
+      - REDIS_IP=redis
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+#  php_5_6:
+#    container_name: php56
+#    build:
+#      context: ./php/56
+#      args:
+#        - WEB_USER=${WEB_USER}
+#        - WEB_GROUP=${WEB_GROUP}
+#        - PHP_ROOT_DIR=${PHP_ROOT_DIR}
+#        - WORK_ROOT_DIR=${WORK_ROOT_DIR}
+#    volumes:
+#      - ../../../projects:${WORK_ROOT_DIR}:delegated
+#      - ./php/56/www.conf:${PHP_ROOT_DIR}/php-fpm.d/www.conf
+#      - ./php/56/php.ini:${PHP_ROOT_DIR}/php/conf.d/php.ini
+#      - ../logs/php:${PHP_ROOT_DIR}/logs
+#      - ./php/composer/auth.json:/root/.composer/auth.json
+#      - ./php/nginx/default:/etc/nginx/sites-enabled/default
+#    restart: always
+#    healthcheck:
+#      test: [ "CMD", "service", "nginx", "start" ]
+#      interval: 10s
+#      timeout: 2s
+#      retries: 1
+#    environment:
+#      - PHP_ROOT_DIR=${PHP_ROOT_DIR}
+#      - WORK_ROOT_DIR=${WORK_ROOT_DIR}
+#      - APACHE_IP=apache
+#      - APACHE_EXPOSED_PORT=${APACHE_EXPOSED_PORT}
+#      - WEB_USER=${WEB_USER}
+#      - WEB_GROUP=${WEB_GROUP}
+#      - MYSQL_IP=mysql
+#      - MYSQL_ROOT_USER=${MYSQL_ROOT_USER}
+#      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+#      - MYSQL_EXPOSED_PORT=${MYSQL_EXPOSED_PORT}
+#      - ELASTIC_IP=elasticsearch
+#      - REDIS_IP=redis
+#    extra_hosts:
+#      - "host.docker.internal:host-gateway"
+  mysql:
+    container_name: mysql
+    build:
+      context: ./mysql
+      args:
+        - MYSQL_CONTAINER_USER=${MYSQL_CONTAINER_USER}
+        - MYSQL_CONTAINER_GROUP=${MYSQL_CONTAINER_GROUP}
+    restart: always
+    ports:
+      - ${MYSQL_EXPOSED_PORT}:3306
+    volumes:
+      - ../logs/mysql:${MYSQL_LOG_DIR}
+      - ../database/mysql:${MYSQL_DATA_DIR}
+      - ../../../projects/link_database:/root/link_database
+    environment:
+      - MYSQL_CONTAINER_USER=${MYSQL_CONTAINER_USER}
+      - MYSQL_CONTAINER_GROUP=${MYSQL_CONTAINER_GROUP}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+  mysql8:
+    container_name: mysql8
+    build:
+      context: ./mysql/8
+      args:
+        - MYSQL_CONTAINER_USER=${MYSQL_CONTAINER_USER}
+        - MYSQL_CONTAINER_GROUP=${MYSQL_CONTAINER_GROUP}
+    restart: always
+    ports:
+      - ${MYSQL8_EXPOSED_PORT}:3306
+    volumes:
+      - ../logs/mysql/8:${MYSQL_LOG_DIR}
+      - ../database/mysql/8:${MYSQL_DATA_DIR}
+      - ../../../projects/link_database:/root/link_database
+    environment:
+      - MYSQL_CONTAINER_USER=${MYSQL_CONTAINER_USER}
+      - MYSQL_CONTAINER_GROUP=${MYSQL_CONTAINER_GROUP}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+  phpmyadmin_mysql8:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - ${PHP_MY_ADMIN_MYSQL8_EXPOSED_PORT}:80
+    environment:
+      - PMA_HOST=mysql8
+      - PMA_USER=${MYSQL_ROOT_USER}
+      - PMA_PASSWORD=${MYSQL_ROOT_PASSWORD}
+  mariadb:
+    container_name: mariadb
+    build:
+      context: ./mariadb
+      args:
+        - MARIADB_CONTAINER_USER=${MARIADB_CONTAINER_USER}
+        - MARIADB_CONTAINER_GROUP=${MARIADB_CONTAINER_GROUP}
+    restart: always
+    ports:
+      - ${MARIADB_EXPOSED_PORT}:3306
+    volumes:
+      - ../logs/mariadb:${MARIADB_LOG_DIR}
+      - ../database/mariadb:${MARIADB_DATA_DIR}
+      - ../../../projects/link_database:/root/link_database
+    environment:
+      - MARIADB_CONTAINER_USER=${MARIADB_CONTAINER_USER}
+      - MARIADB_CONTAINER_GROUP=${MARIADB_CONTAINER_GROUP}
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+      - MARIADB_ROOT_USER=${MARIADB_ROOT_USER}
+      - MARIADB_USER=${MARIADB_ROOT_USER}
+      - MARIADB_PASSWORD=${MARIADB_ROOT_USER}
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - ${PHP_MY_ADMIN_EXPOSED_PORT}:80
+    environment:
+      - PMA_HOST=mysql
+      - PMA_USER=${MYSQL_ROOT_USER}
+      - PMA_PASSWORD=${MYSQL_ROOT_PASSWORD}
+  phpmyadmin_maria:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - "8383:80"
+    environment:
+      - PMA_HOST=mariadb
+      - PMA_USER=${MYSQL_ROOT_USER}
+      - PMA_PASSWORD=${MYSQL_ROOT_PASSWORD}
+#  elasticsearch:
+#    image: elasticsearch:7.10.1
+#    container_name: elasticsearch
+#    restart: always
+#    ports:
+#      - ${ELASTIC_SEARCH_EXPOSED_PORT}:9200
+#      - 9300:9300
+#    environment:
+#      - discovery.type=single-node
+#  redis:
+#    image: redis
+#    container_name: redis
+#    restart: always
+#    ports:
+#      - ${REDIS_EXPOSED_PORT}:6379
+  node:
+    image: node:latest
+    container_name: node
+#    restart: always
+    user: "node"
+    environment:
+      - NODE_ENV=dev
+    working_dir: ${WORK_ROOT_DIR}
+    volumes:
+      - ../../../projects:${WORK_ROOT_DIR}
+    ports:
+      - ${NODE_EXPOSED_PORT}:8081
+    command: ["tail","-f", "/dev/null" ]
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    restart: always
+    ports:
+      - 8000:8000
+      - ${PORTAINER_EXPOSED_PORT}:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  redmine:
+    image: redmine
+    restart: always
+    ports:
+      - 8585:3000
+    environment:
+      REDMINE_DB_MYSQL: mysql
+      REDMINE_DB_PASSWORD: root
+      REDMINE_DB_USERNAME: root
