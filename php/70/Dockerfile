@@ -51,8 +51,11 @@ RUN docker-php-ext-install xsl
 RUN docker-php-ext-install zip
 RUN docker-php-ext-configure zip
 RUN docker-php-ext-install sockets
+RUN apt-get update && apt-get install -y libmcrypt-dev
+RUN docker-php-ext-install mcrypt
 RUN docker-php-ext-install -j$(nproc) opcache
 COPY docker-php-ext-opcache.ini ${PHP_ROOT_DIR}/php/conf.d/docker-php-ext-opcache.ini
+
 
 
 #composer

@@ -5,4 +5,7 @@ update run this when you change change docker-compose=> sudo docker-compose up -
 
 to run docker not admin
 https://docs.docker.com/engine/security/rootless/
+
+
+sudo service docker status
 ````
